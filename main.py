@@ -1,10 +1,15 @@
 from fastapi import FastAPI
 
+from fastapi.staticfiles import StaticFiles
+
+from models import Restaurante
+from models import Pedido
 
 app = FastAPI(title="98food")
+app.mount("/static", StaticFiles(directory="./static"))
 
 pedidos = []
-restaurantes = []
+restaurantes: list[Restaurante] = []
 
 @app.get("/restaurantes")
 def obter_restaurantes():
@@ -14,19 +19,28 @@ def obter_restaurantes():
     return restaurantes
 
 @app.post("/restaurantes")
-def criar_restaurante(num: int, nome: str, cnpj: str, endereco: str, desc: str, categoria: str) -> str:
-    restaurante = {"Num": num, "Nome": nome, "Categoria": categoria, "Descrição": desc, "Endereco": endereco, "CNPJ": cnpj}
+def criar_restaurante(restaurante: Restaurante) -> Restaurante:
     restaurantes.append(restaurante)
-    return "OK"
+    return restaurante
+
+@app.put("/restaurantes/{id}")
+def atualizar_restaurante(id: int, restaurante: Restaurante):
+    for i in restaurantes:
+        if i.id == id:
+            i = restaurante
+            return "OK"
+    return "Não foi acahdo um restaurante com esse id"
+
+
+
 
 @app.post("/pedido")
-def criar_pedido(num: int, comida: str, bebida: str) -> str:
+def criar_pedido(pedido: Pedido) -> str:
     """
     Criar pedidos
     """
-    pedido = {"Número": num, "Comida": comida, "Bebida": bebida}
     pedidos.append(pedido)
-    return "OK"
+    return pedido
 
 @app.get("/pedido")
 def obter_pedido():
@@ -40,4 +54,7 @@ def obter_pedido_id(id: int):
     """
     Obter pedidos
     """
-    return pedidos[id-1]
+    for pedido in pedidos:
+        if pedido.id == id:
+            return pedido
+    return "Error"
