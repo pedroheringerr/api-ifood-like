@@ -1,1 +1,206 @@
-<h1>Hello World</h1>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Ifood (FastAPI)</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 20px; color: #333; }
+        h1, h2 { text-align: center; color: #2c3e50; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #27ae60; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; width: 100%; font-weight: bold; }
+        button:hover { background-color: #219150; }
+        .btn-edit { background-color: #f39c12; width: auto; padding: 5px 10px; margin-top: 10px; }
+        .btn-edit:hover { background-color: #d68910; }
+        ul { list-style-type: none; padding: 0; }
+        li { background: #ecf0f1; margin-bottom: 8px; padding: 12px; border-radius: 4px; border-left: 4px solid #3498db; }
+        hr { border: 1px solid #ddd; margin: 40px 0; }
+    </style>
+</head>
+<body>
+
+    <h1>Painel de Administração</h1>
+
+    <div class="grid">
+        <!-- SEÇÃO: RESTAURANTES -->
+        <div class="card">
+            <h2 id="tituloFormRestaurante">Cadastrar Restaurante</h2>
+            <form id="formRestaurante">
+                <input type="hidden" id="restauranteId" value="0">
+                <div class="form-group"><label>Nome:</label><input type="text" id="restNome" required></div>
+                <div class="form-group"><label>Categoria:</label><input type="text" id="restCat" required></div>
+                <div class="form-group"><label>Descrição:</label><input type="text" id="restDesc" required></div>
+                <div class="form-group"><label>Endereço:</label><input type="text" id="restEnd" required></div>
+                <div class="form-group"><label>CNPJ:</label><input type="text" id="restCnpj" required></div>
+                <button type="submit" id="btnSalvarRestaurante">Salvar Restaurante</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Lista de Restaurantes</h2>
+            <ul id="listaRestaurantes"></ul>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="grid">
+        <!-- SEÇÃO: PEDIDOS -->
+        <div class="card">
+            <h2>Cadastrar Pedido</h2>
+            <form id="formPedido">
+                <div class="form-group">
+                    <label>Restaurante:</label>
+                    <select id="pedRestauranteId" required>
+                        <option value="">Carregando restaurantes...</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Itens (separados por vírgula):</label><input type="text" id="pedItens" placeholder="Ex: Pizza, Refrigerante" required></div>
+                <div class="form-group"><label>Descrição / Observação:</label><input type="text" id="pedDesc" required></div>
+                <div class="form-group"><label>Endereço de Entrega:</label><input type="text" id="pedEnd" required></div>
+                <div class="form-group"><label>Código de Confirmação:</label><input type="number" id="pedCodigo" required></div>
+                <button type="submit">Salvar Pedido</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Lista de Pedidos</h2>
+            <ul id="listaPedidos"></ul>
+        </div>
+    </div>
+
+    <script>
+        let editandoRestaurante = false;
+
+        // --- FUNÇÕES DE RESTAURANTE ---
+        async function buscarRestaurantes() {
+            const res = await fetch('/restaurantes');
+            const data = await res.json();
+            
+            const lista = document.getElementById('listaRestaurantes');
+            const selectRest = document.getElementById('pedRestauranteId');
+            
+            lista.innerHTML = '';
+            selectRest.innerHTML = '<option value="">Selecione um restaurante</option>';
+
+            data.forEach(rest => {
+                // Preenche a lista na tela
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>ID ${rest.id}: ${rest.nome}</strong> (${rest.categoria})<br>
+                                <small>CNPJ: ${rest.cnpj} | End: ${rest.end}</small><br>
+                                <button class="btn-edit" onclick="prepararEdicaoRestaurante(${rest.id}, '${rest.nome}', '${rest.categoria}', '${rest.desc}', '${rest.end}', '${rest.cnpj}')">Editar</button>`;
+                lista.appendChild(li);
+
+                // Preenche o Select do formulário de pedidos
+                const option = document.createElement('option');
+                option.value = rest.id;
+                option.textContent = rest.nome;
+                selectRest.appendChild(option);
+            });
+        }
+
+        function prepararEdicaoRestaurante(id, nome, categoria, desc, end, cnpj) {
+            editandoRestaurante = true;
+            document.getElementById('restauranteId').value = id;
+            document.getElementById('restNome').value = nome;
+            document.getElementById('restCat').value = categoria;
+            document.getElementById('restDesc').value = desc;
+            document.getElementById('restEnd').value = end;
+            document.getElementById('restCnpj').value = cnpj;
+            
+            document.getElementById('tituloFormRestaurante').textContent = `Editar Restaurante (ID: ${id})`;
+            document.getElementById('btnSalvarRestaurante').textContent = "Atualizar Restaurante";
+        }
+
+        document.getElementById('formRestaurante').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const id = parseInt(document.getElementById('restauranteId').value);
+            const restaurante = {
+                id: editandoRestaurante ? id : 0,
+                nome: document.getElementById('restNome').value,
+                categoria: document.getElementById('restCat').value,
+                desc: document.getElementById('restDesc').value,
+                end: document.getElementById('restEnd').value,
+                cnpj: document.getElementById('restCnpj').value
+            };
+
+            const url = editandoRestaurante ? `/restaurantes/${id}` : '/restaurantes';
+            const method = editandoRestaurante ? 'PUT' : 'POST';
+
+            await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(restaurante)
+            });
+
+            document.getElementById('formRestaurante').reset();
+            editandoRestaurante = false;
+            document.getElementById('tituloFormRestaurante').textContent = "Cadastrar Restaurante";
+            document.getElementById('btnSalvarRestaurante').textContent = "Salvar Restaurante";
+            
+            buscarRestaurantes();
+        });
+
+        // --- FUNÇÕES DE PEDIDO ---
+        async function buscarPedidos() {
+            const res = await fetch('/pedido');
+            const data = await res.json();
+            const lista = document.getElementById('listaPedidos');
+            lista.innerHTML = '';
+
+            data.forEach(ped => {
+                const li = document.createElement('li');
+                // Formata o array de itens devolta para string para exibição
+                const itensStr = Array.isArray(ped.itens) ? ped.itens.join(', ') : ped.itens;
+                
+                li.innerHTML = `<strong>Pedido #${ped.id}</strong> (Restaurante ID: ${ped.restaurante_id})<br>
+                                <em>Itens: ${itensStr}</em><br>
+                                <small>Entrega: ${ped.end} | Código: ${ped.codigo}</small>`;
+                lista.appendChild(li);
+            });
+        }
+
+        document.getElementById('formPedido').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // Pega o texto dos itens e transforma em um array removendo espaços extras
+            const itensString = document.getElementById('pedItens').value;
+            const itensArray = itensString.split(',').map(item => item.trim());
+
+            const pedido = {
+                id: 0,
+                restaurante_id: parseInt(document.getElementById('pedRestauranteId').value),
+                itens: itensArray,
+                desc: document.getElementById('pedDesc').value,
+                end: document.getElementById('pedEnd').value,
+                codigo: parseInt(document.getElementById('pedCodigo').value)
+            };
+
+            const res = await fetch('/pedido', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(pedido)
+            });
+
+            const data = await res.json();
+            if(data.erro) {
+                alert(data.erro); // Exibe o erro se o restaurante não existir
+            } else {
+                document.getElementById('formPedido').reset();
+                buscarPedidos();
+            }
+        });
+
+        // Carrega tudo ao abrir a página
+        window.onload = () => {
+            buscarRestaurantes();
+            buscarPedidos();
+        };
+    </script>
+</body>
+</html>

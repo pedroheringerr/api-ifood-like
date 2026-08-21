@@ -12,6 +12,6 @@ class Pedido(BaseModel):
     id: int
     itens: list[str]
     desc: str
-    restaurante: Restaurante
+    restaurante_id: int
     end: str
     codigo: int
