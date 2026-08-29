@@ -1,15 +1,15 @@
 from pydantic import BaseModel
 
 class Restaurante(BaseModel):
-    id: int
+    id: int | None
     nome: str
-    categoria: str
+    categoria: str | None
     desc: str
     end: str
     cnpj: str
 
 class Pedido(BaseModel):
-    id: int
+    id: int | None
     itens: list[str]
     desc: str
     restaurante_id: int
