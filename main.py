@@ -4,7 +4,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 
 import bd  # pyright: ignore[reportImplicitRelativeImport]
-from models import Restaurante, Pedido
+from models import Restaurante, Pedido  # pyright: ignore[reportImplicitRelativeImport]
 
 app = FastAPI(title="Ifood")
 app.mount("/static", StaticFiles(directory="./static"))
@@ -21,7 +21,7 @@ def listar_restaurantes(con: Connection = Depends(bd.obter_conexao)):
     ]
 
 @app.get("/restaurantes/{id}", response_model=Restaurante)
-def obter_restaurante_por_id(id: str, con: Connection = Depends(bd.obter_conexao)):
+def obter_restaurante_por_id(id: int, con: Connection = Depends(bd.obter_conexao)):
     """ Obter restaurante a partir do id """
     dados = bd.obter_restaurante(con, id)
     if not dados:
@@ -52,7 +52,7 @@ def atualizar_restaurante(id: int, restaurante: Restaurante, con: Connection = D
     return restaurante
 
 
-# --- ENDPOINTS PEDIDOS ---
+# PEDIDOS
 
 @app.get("/pedido", response_model=list[Pedido])
 def listar_pedidos(con: Connection = Depends(bd.obter_conexao)):
