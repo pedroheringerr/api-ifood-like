@@ -1,2 +1,37 @@
-**/__pycache__
-*.bd
+### Python ###
+# Arquivos compilados e cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+### Ambientes Virtuais ###
+# Nunca suba a pasta do seu ambiente virtual para o GitHub
+venv/
+.venv/
+env/
+.env_venv/
+
+### Variáveis de Ambiente (MUITO IMPORTANTE) ###
+# Ignora arquivos reais de credenciais, mas permite subir arquivos de exemplo
+.env
+.env.*
+!.env.example
+
+### Logs e Bancos de Dados Locais ###
+*.log
+*.sqlite3
+*.db
+
+### Testes e Tipagem ###
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+### IDEs e Sistema Operacional ###
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
